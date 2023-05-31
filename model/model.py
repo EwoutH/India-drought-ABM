@@ -11,9 +11,18 @@ class FarmingModel(Model):
         self.year = 0
         self.schedule = BaseScheduler(self)
         self.current_id = 0
+
+        money_range = (100, 200)
+
         for i in range(self.num_farmers):
             farmland = Farmland()
-            farmer = Farmer(self.next_id(), self, farmland, self.crop_price)
+            farmer = Farmer(
+                unique_id=self.next_id(),
+                model=self,
+                farmland=farmland,
+                crop_price=self.crop_price,
+                initial_money=self.random.randrange(*money_range)
+            )
             self.schedule.add(farmer)
 
     def step(self):
