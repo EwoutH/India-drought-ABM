@@ -22,6 +22,9 @@ class FarmingModel(Model):
         self.year = 0
         self.schedule = BaseScheduler(self)
         self.current_id = 0
+        self.rainfall = None
+
+        self.rainfall_range = (500, 1500)
 
         money_range = (100, 200)
         cost_of_living_range = (10, 20)
@@ -45,6 +48,7 @@ class FarmingModel(Model):
         )
 
     def step(self):
+        self.random.randrange(*self.rainfall_range)
         self.year += 1
         self.datacollector.collect(self)
         self.schedule.step()
