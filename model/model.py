@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
 
 from mesa import Model
 from mesa.time import BaseScheduler
@@ -6,19 +8,12 @@ from mesa.datacollection import DataCollector
 
 from agents import Farmer
 from objects import Farmland, Crop
-
-def calculate_gini(model):
-    agent_money = [agent.money for agent in model.schedule.agents]
-    x = sorted(agent_money)
-    N = model.num_farmers
-    B = sum(xi * (N - i) for i, xi in enumerate(x)) / (N * sum(x))
-    return 1 + (1 / N) - 2 * B
+from data import ModelParameters, calculate_gini
 
 
 class FarmingModel(Model):
-    def __init__(self, N, crop_price):
+    def __init__(self, N=ModelParameters.num_farmers):
         self.num_farmers = N
-        self.crop_price = crop_price
         self.year = 0
         self.schedule = BaseScheduler(self)
         self.current_id = 0
@@ -26,17 +21,17 @@ class FarmingModel(Model):
 
         self.rainfall_range = (500, 1500)
 
-        money_range = (100, 200)
-        cost_of_living_range = (10, 20)
+        initial_money_range = (100000, 200000)  # in Rs
+        cost_of_living_range = (25000, 100000)  # in Rs per year
+        farm_size_range = (1, 4)                # in hectares
 
         for i in range(self.num_farmers):
-            farmland = Farmland()
+            farmland = Farmland(size=self.random.uniform(*farm_size_range))
             farmer = Farmer(
                 unique_id=self.next_id(),
                 model=self,
                 farmland=farmland,
-                crop_price=self.crop_price,
-                initial_money=self.random.randrange(*money_range),
+                initial_money=self.random.randrange(*initial_money_range),
                 cost_of_living=self.random.randrange(*cost_of_living_range)
             )
             self.schedule.add(farmer)
@@ -54,7 +49,7 @@ class FarmingModel(Model):
         self.schedule.step()
 
 # Usage
-model = FarmingModel(10, 100)
+model = FarmingModel()
 for i in range(10):
     model.step()
     print(f"Year {model.year}: Gini = {calculate_gini(model)}")
