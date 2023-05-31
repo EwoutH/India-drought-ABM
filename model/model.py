@@ -13,6 +13,7 @@ class FarmingModel(Model):
         self.current_id = 0
 
         money_range = (100, 200)
+        cost_of_living_range = (10, 20)
 
         for i in range(self.num_farmers):
             farmland = Farmland()
@@ -21,7 +22,8 @@ class FarmingModel(Model):
                 model=self,
                 farmland=farmland,
                 crop_price=self.crop_price,
-                initial_money=self.random.randrange(*money_range)
+                initial_money=self.random.randrange(*money_range),
+                cost_of_living=self.random.randrange(*cost_of_living_range)
             )
             self.schedule.add(farmer)
 
