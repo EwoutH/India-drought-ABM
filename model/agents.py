@@ -1,18 +1,18 @@
 from mesa import Agent
+from objects import FarmLand, Crop, IrrigationSystem
 
 # Define a Farmer agent
 class Farmer(Agent):
-    def __init__(self, unique_id, model, money, land, network, education_level, risk_awareness, risk_aversion):
+
+
+    def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
         self.name = f"Farmer_{unique_id}"
-        self.money = money
-        self.land = land  # This should now be a FarmLand object
-        self.crops = []  # Add a crops attribute to hold Crop objects
-        self.network = network
-        self.education_level = education_level
-        self.risk_awareness = risk_awareness
-        self.risk_aversion = risk_aversion
-        self.experiences = []
+
+        self.money: float
+        self.yearly_living_expenses: float
+        self.lands: list[FarmLand] = []
+        self.neighbors = None
 
     def select_and_sow_crops(self):
         pass
