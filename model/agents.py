@@ -13,10 +13,11 @@ class Farmer(Agent):
         self.money -= self.cost_of_living
 
         # Plant a crop if the farmland is empty
+        if self.farmland.crop is not None:
+            income = self.farmland.harvest()
+            self.money += income
+            print(f"Farmer {self.unique_id} earned {income:.0f}, now has {self.money:.0f}")
+
         if self.farmland.crop is None:
             crop = Crop(get_weighted_crop_choice())
             self.farmland.plant(crop)
-        else:
-            income = self.farmland.harvest()
-            self.money += income
-            print(f"Farmer {self.unique_id} earned {income}, now has {self.money}")
