@@ -21,3 +21,12 @@ class Farmland:
             self.crop = None
             return income
         return 0
+
+class Loan:
+    def __init__(self, amount, interest_rate, duration, lender):
+        self.amount = amount
+        self.interest_rate = interest_rate
+        self.duration = duration
+        self.years = 0
+        self.lender = lender
+        self.final_amount = amount * (1 + interest_rate) ** duration

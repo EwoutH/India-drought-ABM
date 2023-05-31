@@ -50,10 +50,15 @@ class FarmingModel(Model):
 
 # Usage
 model = FarmingModel()
-for i in range(10):
+for i in range(20):
     model.step()
     print(f"Year {model.year}: Gini = {calculate_gini(model)}")
 
 gini = model.datacollector.get_model_vars_dataframe()
 gini.plot()
+plt.show()
+
+# Plot the wealth of all farmers
+agent_wealth = model.datacollector.get_agent_vars_dataframe()
+agent_wealth.reset_index().pivot(index='Step', columns='AgentID', values='Money').plot()
 plt.show()
