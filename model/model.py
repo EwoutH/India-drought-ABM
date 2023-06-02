@@ -13,16 +13,19 @@ from data import ModelParameters, calculate_gini
 
 class FarmingModel(Model):
     def __init__(self, N=ModelParameters.num_farmers):
+        # TODO: Consider adding different districts, Niteesh checks data.
         self.num_farmers = N
         self.year = 0
-        self.schedule = BaseScheduler(self)
+        self.schedule = BaseScheduler(self)  # Use stage scheduler
         self.current_id = 0
         self.rainfall = None
 
         self.rainfall_range = (500, 1500)
+        self.fraction_borrowers = None  # TODO: Calculate this every step.
 
         initial_money_range = (100000, 200000)  # in Rs
         cost_of_living_range = (25000, 100000)  # in Rs per year
+        # TODO: Use data for farmland sizes https://github.com/EwoutH/India-drought-ABM/blob/main/Data/Farmland/farmland.csv
         farm_size_range = (1, 4)                # in hectares
 
         for i in range(self.num_farmers):
@@ -47,6 +50,14 @@ class FarmingModel(Model):
         self.year += 1
         self.datacollector.collect(self)
         self.schedule.step()
+
+    def rabi(self):
+        # Grows with irrigation
+        pass
+
+    def karif(self):
+        # Grows without irrigation
+        pass
 
 # Usage
 model = FarmingModel()

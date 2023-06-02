@@ -9,6 +9,7 @@ class Farmer(Agent):
         self.money = initial_money
         self.cost_of_living = cost_of_living
         self.loans = []
+        self.education = None # TODO: Few different groups
 
     def step(self):
         self.money -= self.cost_of_living
@@ -51,3 +52,10 @@ class Farmer(Agent):
                 print(f"Farmer {self.unique_id} paid back {loan.final_amount:.0f} to farmer {loan.lender.unique_id}")
             else:
                 loan.years += 1
+
+
+
+# Loading agents:
+# - Nationalized banks. Lowest rate of interest (10-14%), show collatoral or income.
+# - Microfinance institutions. Higher rate of interest (22% to 27%), network based collatoral (joint liability groups). 40% have access.
+# - Neighbors. No rate of interest, no collatoral.

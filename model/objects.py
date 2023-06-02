@@ -3,6 +3,8 @@ from data import ModelParameters
 class Crop:
     def __init__(self, type):
         self.type = type
+        self.growing_season = None  # Rabi or Kharif
+        # Sugercane takes both seasons, all others take one.
 
 class Farmland:
     def __init__(self, size):
