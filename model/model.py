@@ -14,25 +14,33 @@ from data import ModelParameters, calculate_gini
 class FarmingModel(Model):
     def __init__(self, N=ModelParameters.num_farmers):
         # TODO: Consider adding different districts, Niteesh checks data.
-        self.num_farmers = N
-        self.year = 0
+        self.num_farmers: int = N
+        self.year: int = 0
         self.schedule = BaseScheduler(self)  # Use stage scheduler
-        self.current_id = 0
+        self.current_id: int = 0
         self.rainfall = None
 
         self.rainfall_range = (500, 1500)
-        self.fraction_borrowers = None  # TODO: Calculate this every step.
+        self.fraction_borrowers: float
 
         initial_money_range = (100000, 200000)  # in Rs
         cost_of_living_range = (25000, 100000)  # in Rs per year
-        # TODO: Use data for farmland sizes https://github.com/EwoutH/India-drought-ABM/blob/main/Data/Farmland/farmland.csv
-        farm_size_range = (1, 4)                # in hectares
+
+        # Create a dataframe with the chance of each type of farmer.
+        p = ModelParameters.farm_df["Number"]
+        p = p.drop("Total", axis="index")
+        farmer_probabilities = p / p.sum()
 
         for i in range(self.num_farmers):
-            farmland = Farmland(size=self.random.uniform(*farm_size_range))
+            farmer_type = np.random.choice(p.index, p=farmer_probabilities)
+            # Vary the farm size +- 25% of the mean.
+            farm_size = ModelParameters.farm_df.loc[farmer_type]["Area per farmer"] * np.random.uniform(0.75, 1.25)
+
+            farmland = Farmland(size=farm_size)
             farmer = Farmer(
                 unique_id=self.next_id(),
                 model=self,
+                type=farmer_type,
                 farmland=farmland,
                 initial_money=self.random.randrange(*initial_money_range),
                 cost_of_living=self.random.randrange(*cost_of_living_range)
@@ -47,6 +55,7 @@ class FarmingModel(Model):
 
     def step(self):
         self.random.randrange(*self.rainfall_range)
+        self.calculate_fraction_borrowers()
         self.year += 1
         self.datacollector.collect(self)
         self.schedule.step()
@@ -58,6 +67,12 @@ class FarmingModel(Model):
     def karif(self):
         # Grows without irrigation
         pass
+
+    def calculate_fraction_borrowers(self):
+        # Calculate fraction of farmers who have one or more open loans.
+        self.fraction_borrowers = len([farmer for farmer in self.schedule.agents if len(farmer.loans) > 0]) / self.num_farmers
+
+
 
 # Usage
 model = FarmingModel()
