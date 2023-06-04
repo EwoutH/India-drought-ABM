@@ -6,6 +6,7 @@ crop_df_local = pd.read_csv('../analysis/crops/agg_data.csv', index_col=0)
 farm_df_local = pd.read_csv('../Data/Farmland/farmland_clean.csv', index_col=0)
 
 p = crop_df_local["Area (1000 ha)"]
+p = p.fillna(0)
 crop_probabilities = p / p.sum()
 
 @dataclass
