@@ -13,7 +13,6 @@ from data import ModelParameters, calculate_gini
 
 class FarmingModel(Model):
     def __init__(self, N=ModelParameters.num_farmers):
-        # TODO: Consider adding different districts, Niteesh checks data.
         self.num_farmers: int = N
         self.year: int = 0
         self.schedule = BaseScheduler(self)  # Use stage scheduler
@@ -41,6 +40,7 @@ class FarmingModel(Model):
                 unique_id=self.next_id(),
                 model=self,
                 type=farmer_type,
+                district=np.random.choice(ModelParameters.districts),
                 farmland=farmland,
                 initial_money=self.random.randrange(*initial_money_range),
                 cost_of_living=self.random.randrange(*cost_of_living_range)

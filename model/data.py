@@ -4,6 +4,7 @@ import numpy as np
 
 crop_df_local = pd.read_csv('../analysis/crops/agg_data.csv', index_col=0)
 farm_df_local = pd.read_csv('../Data/Farmland/farmland_clean.csv', index_col=0)
+land_value_df_local = pd.read_csv('../Data/csv_data/land_value.csv', index_col=0)
 
 p = crop_df_local["Area (1000 ha)"]
 p = p.fillna(0)
@@ -11,9 +12,11 @@ crop_probabilities = p / p.sum()
 
 @dataclass
 class ModelParameters:
-    num_farmers: int = 10
+    num_farmers: int = 25
     crop_df = crop_df_local
     farm_df = farm_df_local
+    land_value_df = land_value_df_local
+    districts = ["Chitradurga", "Bellary", "Davanagere", "Haveri", "Gadag"]
 
 
 def get_weighted_crop_choice():

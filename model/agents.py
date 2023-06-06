@@ -3,14 +3,14 @@ from objects import Crop, Farmland, Loan
 from data import get_weighted_crop_choice
 
 class Farmer(Agent):
-    def __init__(self, unique_id, model, type, farmland, initial_money, cost_of_living):
+    def __init__(self, unique_id, model, type, district, farmland, initial_money, cost_of_living):
         super().__init__(unique_id, model)
         self.type = type
+        self.district = district
         self.farmland = farmland
         self.money = initial_money
         self.cost_of_living = cost_of_living
         self.loans = []
-        self.education = None # TODO: Few different groups
 
     def step(self):
         self.money -= self.cost_of_living
