@@ -1,6 +1,8 @@
+import random
+
 from mesa import Agent
 from objects import Crop, Farmland, Loan
-from data import get_weighted_crop_choice
+from data import ModelParameters, get_weighted_crop_choice
 
 class Farmer(Agent):
     def __init__(self, unique_id, model, type, district, farmland, initial_money, cost_of_living):
@@ -8,6 +10,7 @@ class Farmer(Agent):
         self.type = type
         self.district = district
         self.farmland = farmland
+        self.land_value = random.uniform(ModelParameters.land_value_df.loc[district]["land_min_value"], ModelParameters.land_value_df.loc[district]["land_max_value"])
         self.money = initial_money
         self.cost_of_living = cost_of_living
         self.loans = []
@@ -23,7 +26,7 @@ class Farmer(Agent):
         self.pay_back_money()
 
     def harvest_crop(self):
-        income = self.farmland.harvest()
+        income = self.farmland.harvest(year=self.model.year)
         self.money += income
         print(f"Farmer {self.unique_id} earned {income:.0f}, now has {self.money:.0f}")
 

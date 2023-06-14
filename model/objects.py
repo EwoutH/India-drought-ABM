@@ -7,17 +7,23 @@ class Crop:
         # Sugercane takes both seasons, all others take one.
 
 class Farmland:
-    def __init__(self, size):
+    def __init__(self, size, district):
         self.crop = None
         self.size = size
+        self.district = district
 
     def plant(self, crop):
         self.crop = crop
 
-    def harvest(self):
+    def harvest(self, year):
         if self.crop is not None:
             # Lookup the crop price from the crop_df
-            crop_price = ModelParameters.crop_df.loc[self.crop.type]["Price (Rs/quintal)"]
+            district_df = ModelParameters.crop_prices_dict[self.district]
+            try:
+                crop_price = district_df[self.crop.type][year]
+            except KeyError:
+                print(f"District {self.district} does not grow {self.crop.type}")
+            print(crop_price)
             crop_yield = ModelParameters.crop_df.loc[self.crop.type]["Yield (tons/ha)"]
             income = crop_price * 10 * crop_yield * self.size
             self.crop = None

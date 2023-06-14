@@ -14,7 +14,8 @@ from data import ModelParameters, calculate_gini
 class FarmingModel(Model):
     def __init__(self, N=ModelParameters.num_farmers):
         self.num_farmers: int = N
-        self.year: int = 0
+        self.year: int = ModelParameters.initial_year
+        self.run_length: int = ModelParameters.run_length
         self.schedule = BaseScheduler(self)  # Use stage scheduler
         self.current_id: int = 0
         self.rainfall = None
@@ -31,11 +32,12 @@ class FarmingModel(Model):
         farmer_probabilities = p / p.sum()
 
         for i in range(self.num_farmers):
+            district = np.random.choice(ModelParameters.districts)
             farmer_type = np.random.choice(p.index, p=farmer_probabilities)
             # Vary the farm size +- 25% of the mean.
             farm_size = ModelParameters.farm_df.loc[farmer_type]["Area per farmer"] * np.random.uniform(0.75, 1.25)
 
-            farmland = Farmland(size=farm_size)
+            farmland = Farmland(size=farm_size, district=district)
             farmer = Farmer(
                 unique_id=self.next_id(),
                 model=self,
