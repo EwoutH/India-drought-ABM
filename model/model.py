@@ -8,7 +8,7 @@ from mesa.datacollection import DataCollector
 
 from agents import Farmer
 from objects import Farmland, Crop
-from data import ModelParameters, calculate_gini
+from data import ModelParameters, calculate_gini, get_farm_size
 
 
 class FarmingModel(Model):
@@ -33,9 +33,7 @@ class FarmingModel(Model):
 
         for i in range(self.num_farmers):
             district = np.random.choice(ModelParameters.districts)
-            farmer_type = np.random.choice(p.index, p=farmer_probabilities)
-            # Vary the farm size +- 25% of the mean.
-            farm_size = ModelParameters.farm_df.loc[farmer_type]["Area per farmer"] * np.random.uniform(0.75, 1.25)
+            farm_size, farmer_type = get_farm_size()
 
             farmland = Farmland(size=farm_size, district=district)
             farmer = Farmer(
@@ -78,7 +76,7 @@ class FarmingModel(Model):
 
 # Usage
 model = FarmingModel()
-for i in range(20):
+for i in range(ModelParameters.run_length):
     model.step()
     print(f"Year {model.year}: Gini = {calculate_gini(model)}")
 

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import pandas as pd
 import numpy as np
 from random import gauss
+from scipy.stats import lognorm
 
 crop_df_local = pd.read_csv('../analysis/crops/agg_data.csv', index_col=0)
 farm_df_local = pd.read_csv('../Data/Farmland/farmland_clean.csv', index_col=0)
@@ -38,7 +39,7 @@ class ModelParameters:
         crop_volatility[district] = crop_prices.std()
 
         # Predict the next years: price = mean + volatility * gauss(0, 1). Extend the crop_prices dataframe.
-        for i in range(run_length):
+        for i in range(run_length+1):
             gauss_for_each_crop = [gauss(0, 1) for i in range(len(crop_prices.columns))]
             crop_prices.loc[initial_year + i] = crop_mean[district] + crop_volatility[district] * gauss_for_each_crop
 
@@ -54,6 +55,22 @@ def get_weighted_crop_choice():
     random_crop = np.random.choice(crop_probabilities.index, p=crop_probabilities)
     return random_crop
 
+def get_farm_size(shape=0.92, loc=0, scale=1.25):
+    # Drawing the number from lognormal distribution, capping at 1000, and classifying it.
+    farm_size = min(lognorm.rvs(shape, loc, scale), 1000)
+    farm_class = classify_size(farm_size)
+    return farm_size, farm_class
+
+def classify_size(size):
+    # Define the boundaries and the labels
+    boundaries = [0, 1, 2, 4, 10, np.inf]
+    labels = ['Marginal', 'Small', 'Semi-medium', 'Medium', 'Large']
+
+    # Get the index of the bin that the farm size falls into
+    bin_index = np.digitize(size, boundaries) - 1
+
+    # Return the appropriate label
+    return labels[bin_index]
 
 def calculate_gini(model):
     agent_money = [agent.money for agent in model.schedule.agents]
