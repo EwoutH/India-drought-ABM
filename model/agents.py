@@ -14,8 +14,10 @@ class Farmer(Agent):
         self.money = initial_money
         self.cost_of_living = cost_of_living
         self.loans = []
+        self.will_lend: bool
 
     def step(self):
+        self.will_lend = self.random.random() < self.model.lend_probability
         self.money -= self.cost_of_living
         if self.farmland.crop is not None:
             self.harvest_crop()
@@ -39,7 +41,7 @@ class Farmer(Agent):
         interest_rate = self.random.uniform(0.05, 0.15)
         duration = self.random.randrange(1, 5)
         for neighbor in self.model.schedule.agents:
-            if neighbor.money > 0:
+            if neighbor.money > 0 and neighbor.will_lend:
                 loan = Loan(amount_to_borrow, interest_rate, duration, neighbor)
                 neighbor.money -= amount_to_borrow
                 self.money += amount_to_borrow

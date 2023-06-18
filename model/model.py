@@ -20,6 +20,7 @@ class FarmingModel(Model):
         self.current_id: int = 0
         self.rainfall = None
         self.minimum_cropable_area = 0.4    # in ha (this is 1 Acre)
+        self.lend_probability = 0.3
 
 
         self.rainfall_range = (500, 1500)
