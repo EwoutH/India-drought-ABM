@@ -1,10 +1,12 @@
 from data import ModelParameters
 
+
 class Crop:
     def __init__(self, type):
         self.type = type
         self.growing_season = None  # Rabi or Kharif
         # Sugercane takes both seasons, all others take one.
+
 
 class Farmland:
     def __init__(self, size, district, pieces):
@@ -31,11 +33,30 @@ class Farmland:
             return income
         return 0
 
+
 class Loan:
-    def __init__(self, amount, interest_rate, duration, lender):
+    def __init__(self, amount, interest_rate, duration, lender, interest_rate_after_duration=None):
         self.amount = amount
         self.interest_rate = interest_rate
         self.duration = duration
         self.years = 0
         self.lender = lender
-        self.final_amount = amount * (1 + interest_rate) ** duration
+        self.interest_rate_after_duration = (
+            interest_rate if interest_rate_after_duration is None else interest_rate_after_duration
+        )
+        self.current_interest_rate = interest_rate
+
+    def update(self):
+        # TODO: Validate order of steps here, also considering year = 0
+        self.years += 1
+        if self.years > self.duration:
+            self.current_interest_rate = self.interest_rate_after_duration
+        self.amount *= 1 + self.current_interest_rate
+
+    def pay_off(self, amount):
+        self.amount -= amount
+        if self.amount <= 0:
+            self.lender.money += self.amount
+            self.amount = 0
+            self.lender.loans.remove(self)
+            del self
