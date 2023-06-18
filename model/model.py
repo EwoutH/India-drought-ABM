@@ -19,6 +19,8 @@ class FarmingModel(Model):
         self.schedule = BaseScheduler(self)  # Use stage scheduler
         self.current_id: int = 0
         self.rainfall = None
+        self.minimum_cropable_area = 0.4    # in ha (this is 1 Acre)
+
 
         self.rainfall_range = (500, 1500)
         self.fraction_borrowers: float
@@ -35,7 +37,7 @@ class FarmingModel(Model):
             district = np.random.choice(ModelParameters.districts)
             farm_size, farmer_type = get_farm_size()
 
-            farmland = Farmland(size=farm_size, district=district)
+            farmland = Farmland(size=farm_size, district=district, pieces=int(farm_size / self.minimum_cropable_area))
             farmer = Farmer(
                 unique_id=self.next_id(),
                 model=self,

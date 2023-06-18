@@ -7,10 +7,11 @@ class Crop:
         # Sugercane takes both seasons, all others take one.
 
 class Farmland:
-    def __init__(self, size, district):
+    def __init__(self, size, district, pieces):
         self.crop = None
         self.size = size
         self.district = district
+        self.pieces = pieces
 
     def plant(self, crop):
         self.crop = crop
