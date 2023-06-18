@@ -15,7 +15,7 @@ crop_probabilities = p / p.sum()
 
 @dataclass
 class ModelParameters:
-    num_farmers: int = 25
+    num_farmers: int = 10
     initial_year: int = 2017
     run_length: int = 30
     crop_df = crop_df_local
@@ -73,8 +73,8 @@ def classify_size(size):
     return labels[bin_index]
 
 def calculate_gini(model):
-    agent_money = [agent.money for agent in model.schedule.agents]
-    x = sorted(agent_money)
+    agent_value = [agent.value for agent in model.schedule.agents]
+    x = sorted(agent_value)
     N = model.num_farmers
     B = sum(xi * (N - i) for i, xi in enumerate(x)) / (N * sum(x))
     return 1 + (1 / N) - 2 * B

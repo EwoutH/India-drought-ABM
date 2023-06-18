@@ -26,7 +26,6 @@ class Farmland:
                 crop_price = district_df[self.crop.type][year]
             except KeyError:
                 print(f"District {self.district} does not grow {self.crop.type}")
-            print(crop_price)
             crop_yield = ModelParameters.crop_df.loc[self.crop.type]["Yield (tons/ha)"]
             income = crop_price * 10 * crop_yield * self.size
             self.crop = None
@@ -35,12 +34,13 @@ class Farmland:
 
 
 class Loan:
-    def __init__(self, amount, interest_rate, duration, lender, interest_rate_after_duration=None):
+    def __init__(self, amount, interest_rate, duration, lender, borrower, interest_rate_after_duration=None):
         self.amount = amount
         self.interest_rate = interest_rate
         self.duration = duration
         self.years = 0
         self.lender = lender
+        self.borrower = borrower
         self.interest_rate_after_duration = (
             interest_rate if interest_rate_after_duration is None else interest_rate_after_duration
         )
@@ -53,10 +53,10 @@ class Loan:
             self.current_interest_rate = self.interest_rate_after_duration
         self.amount *= 1 + self.current_interest_rate
 
-    def pay_off(self, amount):
+    def pay_back(self, amount):
         self.amount -= amount
         if self.amount <= 0:
             self.lender.money += self.amount
             self.amount = 0
-            self.lender.loans.remove(self)
+            self.borrower.loans.remove(self)
             del self

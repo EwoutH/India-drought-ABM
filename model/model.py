@@ -53,7 +53,9 @@ class FarmingModel(Model):
         # Add data collector.
         self.datacollector = DataCollector(
             model_reporters={"Gini": calculate_gini},
-            agent_reporters={"Money": "money"}
+            agent_reporters={"Money": "money",
+                             "Years in debt": "years_in_debt",
+                             "Years in increasing debt": "years_in_increasing_debt"}
         )
 
     def step(self):
@@ -90,4 +92,7 @@ plt.show()
 # Plot the wealth of all farmers
 agent_wealth = model.datacollector.get_agent_vars_dataframe()
 agent_wealth.reset_index().pivot(index='Step', columns='AgentID', values='Money').plot()
+plt.show()
+
+agent_wealth.reset_index().pivot(index='Step', columns='AgentID', values='Years in increasing debt').plot()
 plt.show()
