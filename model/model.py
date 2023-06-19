@@ -9,7 +9,7 @@ from mesa.datacollection import DataCollector
 
 from agents import Farmer
 from objects import Farmland, Crop
-from data import ModelParameters, calculate_gini, calculate_number_of_crops, get_farm_size, get_crop_dict
+from data import ModelParameters, calculate_gini, calculate_number_of_crops, get_farm_size, get_crop_dict, predict_crop_prices
 
 
 class FarmingModel(Model):
@@ -20,6 +20,7 @@ class FarmingModel(Model):
         self.schedule = BaseScheduler(self)  # Use stage scheduler
         self.current_id: int = 0
         self.rainfall = None
+        self.predicted_crop_prices = {}
         self.minimum_cropable_area = 0.4    # in ha (this is 1 Acre)
         self.lend_probability = 0.3
         self.crops_per_farmer_coefficient = 3  # Does not actually represent the average, since many farmers have not enough parcels of land to plant 3 crops.
@@ -70,9 +71,11 @@ class FarmingModel(Model):
     def step(self):
         self.random.randrange(*self.rainfall_range)
         self.calculate_fraction_borrowers()
-        self.year += 1
+        predict_crop_prices(self)
+
         self.datacollector.collect(self)
         self.schedule.step()
+        self.year += 1
 
     def rabi(self):
         # Grows with irrigation

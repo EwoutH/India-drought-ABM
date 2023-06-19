@@ -89,6 +89,16 @@ def classify_size(size):
     # Return the appropriate label
     return labels[bin_index]
 
+
+def predict_crop_prices(model):
+    # For each district, predict next years crop prices for farmers using the mean of the previous 5 years.
+    for district in ModelParameters.districts:
+        # Get the last 5 years of crop prices. The current year is model.year.
+        crop_prices = ModelParameters.crop_prices_dict[district].loc[model.year - 5:model.year - 1]
+        # Calculate the mean of the last 5 years, and save it as a dictionary.
+        model.predicted_crop_prices[district] = crop_prices.mean().to_dict()
+
+
 def calculate_gini(model):
     agent_value = [agent.value for agent in model.schedule.agents]
     x = sorted(agent_value)
