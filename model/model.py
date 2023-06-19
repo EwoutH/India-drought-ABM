@@ -2,10 +2,12 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import itertools
+import math
 
 from mesa import Model
 from mesa.time import BaseScheduler
 from mesa.datacollection import DataCollector
+from mesa.space import SingleGrid
 
 from agents import Farmer
 from objects import Farmland, Crop
@@ -15,6 +17,7 @@ from data import ModelParameters, calculate_gini, calculate_number_of_crops, get
 class FarmingModel(Model):
     def __init__(self, N=ModelParameters.num_farmers):
         self.num_farmers: int = N
+        self.avg_neighbours = 4  # Max 8
         self.year: int = ModelParameters.initial_year
         self.run_length: int = ModelParameters.run_length
         self.schedule = BaseScheduler(self)  # Use stage scheduler
@@ -24,28 +27,55 @@ class FarmingModel(Model):
         self.minimum_cropable_area = 0.4    # in ha (this is 1 Acre)
         self.lend_probability = 0.3
         self.crops_per_farmer_coefficient = 3  # Does not actually represent the average, since many farmers have not enough parcels of land to plant 3 crops.
-
-
         self.rainfall_range = (500, 1500)
+        self.districts = ModelParameters.districts
 
         initial_money_range = (100000, 200000)  # in Rs
         cost_of_living_range = (25000, 100000)  # in Rs per year
 
-        for i in range(self.num_farmers):
-            district = np.random.choice(ModelParameters.districts)
-            farm_size, farmer_type = get_farm_size()
+        # Calculate total grid size
+        grid_size = self.num_farmers * 8 // self.avg_neighbours
+        # Calculate district size
+        district_size = int((grid_size - 4) // 5)  # Size of a district
+        district_dim = int(district_size**0.5)  # Dimensions of a district
+        self.height = 5 * district_dim + 4  # Total height of the grid
+        self.width = district_dim  # Total width of the grid
+        while (self.height-4) * self.width < self.num_farmers:
+            self.width += 1
 
-            farmland = Farmland(size=farm_size, district=district, n_parcels=max(int(farm_size / self.minimum_cropable_area), 1))
+        self.grid = SingleGrid(self.width, self.height, torus=False)
+        print(f"Created a grid of size {self.width}x{self.height} with {self.num_farmers} farmers")
+
+        for i in range(self.num_farmers):
+            farm_size, farmer_type = get_farm_size()
+            district = i // (self.num_farmers // 5)
+
+            farmland = Farmland(size=farm_size, district=self.districts[district], n_parcels=max(int(farm_size / self.minimum_cropable_area), 1))
             farmer = Farmer(
                 unique_id=self.next_id(),
                 model=self,
                 type=farmer_type,
-                district=np.random.choice(ModelParameters.districts),  # Maybe make weighted choice
+                district=self.districts[district],  # Maybe make weighted choice
                 farmland=farmland,
                 initial_money=self.random.randrange(*initial_money_range),   # TODO: Improve with data
-                cost_of_living=self.random.randrange(*cost_of_living_range)  # Will depend on expenditure
+                cost_of_living=self.random.randrange(*cost_of_living_range),  # Will depend on expenditure
             )
             self.schedule.add(farmer)
+
+            # Compute district to place the agent
+            min_row = district_dim * district + district    # Min row for this district
+            max_row = min_row + district_dim - 1            # Max row for this district
+            empty = self.grid.empties
+            # Choose an empty cell within the district
+            viable_positions = [pos for pos in empty if min_row <= pos[1] <= max_row]
+            pos = self.random.choice(viable_positions)
+            self.grid.place_agent(farmer, pos)
+
+        total_neighbours = 0
+        for farmer in self.schedule.agents:
+            self.neighbours = self.grid.get_neighbors(farmer.pos, moore=True)
+            total_neighbours += len(self.neighbours)
+        print(f"Average number of neighbours: {total_neighbours / self.num_farmers}")
 
         average_number_of_farmland_parcels = np.mean([farmer.farmland.n_parcels for farmer in self.schedule.agents])
         for farmer in self.schedule.agents:

@@ -14,6 +14,7 @@ class Farmer(Agent):
         self.money = initial_money
         self.value = self.money
         self.cost_of_living = cost_of_living
+        self.neighbours = []
         self.loans = []
         self.will_lend: bool
         self.years_in_debt = 0
