@@ -24,10 +24,10 @@ class Farmer(Agent):
         self.will_lend = self.random.random() < self.model.lend_probability
         self.money -= self.cost_of_living
 
-        if self.farmland.crop is not None:
-            self.harvest_crop()
-        if self.farmland.crop is None:
-            self.plant_crop()
+        self.harvest_crops()
+        # Select one random crop to plant. TODO: Make this neighbour dependent.
+        crop = get_weighted_crop_choice()
+        self.plant_crops()
 
         if self.money < 0:
             self.borrow_money(amount_to_borrow=-self.money)
@@ -44,13 +44,13 @@ class Farmer(Agent):
         else:
             self.years_in_debt = 0
 
-    def harvest_crop(self):
+    def harvest_crops(self):
         income = self.farmland.harvest(year=self.model.year)
         self.money += income
         print(f"Farmer {self.unique_id} earned {income:.0f}, now has {self.money:.0f}")
 
-    def plant_crop(self):
-        crop = Crop(get_weighted_crop_choice())
+    def plant_crops(self):
+        crop = get_weighted_crop_choice()
         self.farmland.plant(crop)
 
     def borrow_money(self, amount_to_borrow, max_interest_rate=2.0):

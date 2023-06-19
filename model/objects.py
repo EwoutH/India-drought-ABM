@@ -1,4 +1,6 @@
 from data import ModelParameters
+from collections import Counter
+import random
 
 
 class Crop:
@@ -9,29 +11,49 @@ class Crop:
 
 
 class Farmland:
-    def __init__(self, size, district, pieces):
-        self.crop = None
+    def __init__(self, size, district, n_parcels):
         self.size = size
         self.district = district
-        self.pieces = pieces
+        self.n_parcels = n_parcels
+        self.parcels = [Parcel(size / n_parcels) for _ in range(n_parcels)]
+        self.crop_counter = Counter()
 
-    def plant(self, crop):
-        self.crop = crop
+    def plant(self, new_crop, n_parcels=1, replace_pref=[]):
+        replace_pref = [crop_type for crop_type in replace_pref if crop_type in self.parcels]
+        replace_pref_index = 0
+        while n_parcels > 0:
+            current_crops = set(parcel.crop for parcel in self.parcels)
+            # Select the first crop out replace_pref that's already planted
+            while replace_pref_index < len(replace_pref):
+                if replace_pref[replace_pref_index] in current_crops:
+                    replace_crop = replace_pref[replace_pref_index]
+                    break
+                replace_pref_index += 1
+            else:
+                replace_crop = random.choice(list(current_crops))
+            # Select a random parcel with that crop
+            parcel = random.choice([parcel for parcel in self.parcels if parcel.crop == replace_crop or parcel.crop == None])
+            # Plant the crop
+            parcel.crop = new_crop
+            n_parcels -= 1
+        self.crop_counter = Counter([parcel.crop for parcel in self.parcels])
+
 
     def harvest(self, year):
-        if self.crop is not None:
-            # Lookup the crop price from the crop_df
-            district_df = ModelParameters.crop_prices_dict[self.district]
-            try:
-                crop_price = district_df[self.crop.type][year]
-            except KeyError:
-                print(f"District {self.district} does not grow {self.crop.type}")
-            crop_yield = ModelParameters.crop_df.loc[self.crop.type]["Yield (tons/ha)"]
-            income = crop_price * 10 * crop_yield * self.size
-            self.crop = None
-            return income
-        return 0
+        income = 0
+        district_df = ModelParameters.crop_prices_dict[self.district]
+        for parcel in self.parcels:
+            if parcel.crop is not None:
+                # Lookup the crop price from the crop_df
+                crop_price = district_df[parcel.crop][year]
+                crop_yield = ModelParameters.crop_df.loc[parcel.crop]["Yield (tons/ha)"]
+                income += crop_price * 10 * crop_yield * parcel.size
+        return income
 
+class Parcel:
+    def __init__(self, size):
+        self.size = size
+        self.crop = None
 
 class Loan:
     def __init__(self, amount, interest_rate, duration, lender, borrower, interest_rate_after_duration=None):

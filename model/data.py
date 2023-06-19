@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from random import gauss
 from scipy.stats import lognorm
+from collections import Counter
 
 crop_df_local = pd.read_csv('../analysis/crops/agg_data.csv', index_col=0)
 farm_df_local = pd.read_csv('../Data/Farmland/farmland_clean.csv', index_col=0)
@@ -18,6 +19,7 @@ class ModelParameters:
     num_farmers: int = 10
     initial_year: int = 2017
     run_length: int = 30
+    crop_list = p.index.tolist()
     crop_df = crop_df_local
     farm_df = farm_df_local
     land_value_df = land_value_df_local
@@ -55,6 +57,21 @@ def get_weighted_crop_choice():
     random_crop = np.random.choice(crop_probabilities.index, p=crop_probabilities)
     return random_crop
 
+def get_crop_dict(n_crops, n_parcels):
+    # Create a dictionary of crops, with the number of parcels of land for each crop.
+    crops = np.random.choice(crop_probabilities.index, size=n_crops, replace=False)
+    crop_dict = {}
+    # Select crops from crop_probabilities, and normalize the probabilities to 1.
+    new_crop_probabilities = crop_probabilities[crops] / crop_probabilities[crops].sum()
+
+    for _ in range(n_parcels):
+        crop = np.random.choice(crops, p=new_crop_probabilities.values)
+        if crop in crop_dict:
+            crop_dict[crop] += 1
+        else:
+            crop_dict[crop] = 1
+    return crop_dict
+
 def get_farm_size(shape=0.92, loc=0, scale=1.25):
     # Drawing the number from lognormal distribution, capping at 1000, and classifying it.
     farm_size = min(lognorm.rvs(shape, loc, scale), 1000)
@@ -78,3 +95,8 @@ def calculate_gini(model):
     N = model.num_farmers
     B = sum(xi * (N - i) for i, xi in enumerate(x)) / (N * sum(x))
     return 1 + (1 / N) - 2 * B
+
+def calculate_number_of_crops(model):
+    # Create a Counter with the number of farmers that have a certain number of crops.
+    number_of_crops = [len(farmer.farmland.crop_counter) for farmer in model.schedule.agents]
+    return Counter(number_of_crops)
