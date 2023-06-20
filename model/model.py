@@ -73,8 +73,8 @@ class FarmingModel(Model):
 
         total_neighbours = 0
         for farmer in self.schedule.agents:
-            self.neighbours = self.grid.get_neighbors(farmer.pos, moore=True)
-            total_neighbours += len(self.neighbours)
+            farmer.neighbours = self.grid.get_neighbors(farmer.pos, moore=True)
+            total_neighbours += len(farmer.neighbours)
         print(f"Average number of neighbours: {total_neighbours / self.num_farmers}")
 
         average_number_of_farmland_parcels = np.mean([farmer.farmland.n_parcels for farmer in self.schedule.agents])
