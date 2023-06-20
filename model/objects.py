@@ -56,17 +56,18 @@ class Parcel:
         self.crop = None
 
 class Loan:
-    def __init__(self, amount, interest_rate, duration, lender, borrower, interest_rate_after_duration=None):
+    def __init__(self, amount, interest_rate, duration, borrower, lender=None, interest_rate_after_duration=None, collateral_used=0):
         self.amount = amount
         self.interest_rate = interest_rate
         self.duration = duration
         self.years = 0
-        self.lender = lender
         self.borrower = borrower
+        self.lender = lender
         self.interest_rate_after_duration = (
             interest_rate if interest_rate_after_duration is None else interest_rate_after_duration
         )
         self.current_interest_rate = interest_rate
+        self.collateral_used = collateral_used
 
     def update(self):
         # TODO: Validate order of steps here, also considering year = 0
@@ -78,7 +79,8 @@ class Loan:
     def pay_back(self, amount):
         self.amount -= amount
         if self.amount <= 0:
-            self.lender.money += self.amount
+            if self.lender is not None:
+                self.lender.money += self.amount
             self.amount = 0
             self.borrower.loans.remove(self)
             del self

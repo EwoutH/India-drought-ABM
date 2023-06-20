@@ -12,6 +12,7 @@ class Farmer(Agent):
         self.farmland = farmland
         self.land_value = random.uniform(ModelParameters.land_value_df.loc[district]["land_min_value"], ModelParameters.land_value_df.loc[district]["land_max_value"])
         self.money = initial_money
+        self.income = 0
         self.value = self.money
         self.cost_of_living = cost_of_living
         self.neighbours = []
@@ -48,6 +49,7 @@ class Farmer(Agent):
 
     def harvest_crops(self):
         income = self.farmland.harvest(year=self.model.year)
+        self.income = income
         self.money += income
         print(f"Farmer {self.unique_id} earned {income:.0f}, now has {self.money:.0f}")
 
@@ -63,18 +65,41 @@ class Farmer(Agent):
         # Create list of neighbours sorted by money (ask richest first)
         for neighbour in self.neighbours:
             if neighbour.money > 0 and neighbour.will_lend:
-                amount_to_borrow = min(amount_to_borrow, neighbour.money)
+                amount_to_borrow_now = min(amount_to_borrow, neighbour.money)
 
-                loan = Loan(amount_to_borrow, interest_rate, duration, neighbour, self)
-                neighbour.money -= amount_to_borrow
-                self.money += amount_to_borrow
+                loan = Loan(amount_to_borrow_now, interest_rate, duration, self, neighbour)
+                neighbour.money -= amount_to_borrow_now
+                self.money += amount_to_borrow_now
                 self.loans.append(loan)
-                borrowed += amount_to_borrow
-                print(f"Farmer {self.unique_id} borrowed {amount_to_borrow:.0f} from farmer {neighbour.unique_id}")
+                borrowed += amount_to_borrow_now
+                print(f"Farmer {self.unique_id} borrowed {amount_to_borrow_now:.0f} from farmer {neighbour.unique_id}")
                 if borrowed >= amount_to_borrow:
                     return
 
-        # Second, check bank. TODO
+        # Second, check Nationalized banks. Lowest rate of interest (10-14%), show collatoral (60%) or income.
+        # Calculate max loan amount from income
+        income_financing = self.income * 0.3
+
+        max_collateral = self.farmland.size * self.model.land_value * 0.6
+        collateral_in_loans = sum([loan.collateral_used for loan in self.loans])
+        available_collateral = max(0, (max_collateral - collateral_in_loans))
+
+        amount_to_borrow_now = min(amount_to_borrow, (income_financing + available_collateral))
+        collateral_used = max(0, (amount_to_borrow_now - income_financing))
+
+        interest_rate = random.uniform(0.10, 0.14)
+        interest_rate_after_duration = interest_rate * 1.5
+        duration = random.randint(2, 4)
+
+        loan = Loan(amount_to_borrow_now, interest_rate, duration, self, interest_rate_after_duration=interest_rate_after_duration, collateral_used=collateral_used)
+        self.money += amount_to_borrow_now
+        self.loans.append(loan)
+        borrowed += amount_to_borrow_now
+        print(f"Farmer {self.unique_id} borrowed {amount_to_borrow_now:.0f} for {duration} years at {interest_rate:.2%} from bank based on proven income and {collateral_used:.0f} collateral")
+
+        if borrowed >= amount_to_borrow:
+            return
+
         # Third, check microfinance institution. TODO
 
         print(f"Farmer {self.unique_id} hasn't borrowed enough money, still needs {amount_to_borrow - borrowed:.0f}")
@@ -82,14 +107,15 @@ class Farmer(Agent):
     # Pay back as much open loans, until either all loans are paid back, all money is used or the interest rate to lend
     def pay_back_loans(self):
         # Pay back loans with the highest interest rate first (if interest rate is the same, pay back the smallest loan first)
-        loans_to_pay_back = sorted(self.loans, key=lambda x: (-x.interest_rate, x.amount))
+        loans_to_pay_back = sorted(self.loans, key=lambda x: (-x.current_interest_rate, x.amount))
         while self.money > 0 and len(loans_to_pay_back) > 0:
             loan = loans_to_pay_back.pop(0)
             amount_to_pay_back = min(self.money, loan.amount)
             loan.pay_back(amount_to_pay_back)
             self.money -= amount_to_pay_back
-            print(f"Farmer {self.unique_id} paid back {amount_to_pay_back:.0f} to farmer {loan.lender.unique_id}, {self.money:.0f} left, {len(self.loans)} loans left (total {sum([loan.amount for loan in self.loans]):.0f})")
-
+            lender_name = f"farmer {loan.lender.unique_id}" if loan.lender is not None else "bank"
+            print(f"Farmer {self.unique_id} paid back {amount_to_pay_back:.0f} to {lender_name}, {self.money:.0f} left, {len(self.loans)} loans left (total {sum([loan.amount for loan in self.loans]):.0f})")
+            i = 0
 
 # Loading agents:
 # - Nationalized banks. Lowest rate of interest (10-14%), show collatoral or income.

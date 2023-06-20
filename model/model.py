@@ -28,6 +28,7 @@ class FarmingModel(Model):
         self.lend_probability = 0.3
         self.crops_per_farmer_coefficient = 3  # Does not actually represent the average, since many farmers have not enough parcels of land to plant 3 crops.
         self.rainfall_range = (500, 1500)
+        self.land_value = 20000000  # in Rs per ha
         self.districts = ModelParameters.districts
         self.jgls = []  # Changed to a list
 
