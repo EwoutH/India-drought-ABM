@@ -60,8 +60,7 @@ class Farmer(Agent):
         interest_rate = 0
         duration = 1
         # Create list of neighbours sorted by money (ask richest first)
-        neighbours = sorted(self.model.schedule.agents, key=lambda x: x.money, reverse=True)
-        for neighbour in neighbours:
+        for neighbour in self.neighbours:
             if neighbour.money > 0 and neighbour.will_lend:
                 amount_to_borrow = min(amount_to_borrow, neighbour.money)
 
