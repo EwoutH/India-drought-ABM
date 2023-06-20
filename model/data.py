@@ -16,7 +16,7 @@ crop_probabilities = p / p.sum()
 
 @dataclass
 class ModelParameters:
-    num_farmers: int = 10
+    num_farmers: int = 1000
     initial_year: int = 2017
     run_length: int = 30
     crop_list = p.index.tolist()
@@ -24,6 +24,9 @@ class ModelParameters:
     farm_df = farm_df_local
     land_value_df = land_value_df_local
     districts = ["Chitradurga", "Bellary", "Davanagere", "Haveri", "Gadag"]
+    size_classes = ['Marginal', 'Small', 'Semi-medium', 'Medium', 'Large']
+    jgl_membership = [0.4, 0.4, 0.4, 0.4, 0.1]  # 40% of farmers are members of a JGL, except only 10% of large farmers.
+    jgl_membership = {size: membership for size, membership in zip(size_classes, jgl_membership)}
 
     # Calculate crop prices
     crop_mean = {}
@@ -81,13 +84,12 @@ def get_farm_size(shape=0.92, loc=0, scale=1.25):
 def classify_size(size):
     # Define the boundaries and the labels
     boundaries = [0, 1, 2, 4, 10, np.inf]
-    labels = ['Marginal', 'Small', 'Semi-medium', 'Medium', 'Large']
 
     # Get the index of the bin that the farm size falls into
     bin_index = np.digitize(size, boundaries) - 1
 
     # Return the appropriate label
-    return labels[bin_index]
+    return ModelParameters.size_classes[bin_index]
 
 
 def predict_crop_prices(model):

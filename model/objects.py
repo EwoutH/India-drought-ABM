@@ -82,3 +82,10 @@ class Loan:
             self.amount = 0
             self.borrower.loans.remove(self)
             del self
+
+class JGL:
+    def __init__(self, max_size, type, district):
+        self.members = []
+        self.max_size = max_size
+        self.type = type
+        self.district = district

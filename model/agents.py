@@ -19,6 +19,7 @@ class Farmer(Agent):
         self.will_lend: bool
         self.years_in_debt = 0
         self.years_in_increasing_debt = 0
+        self.jgl = None  # JGL reference
 
     def step(self):
         value_last_year = self.value

@@ -10,7 +10,7 @@ from mesa.datacollection import DataCollector
 from mesa.space import SingleGrid
 
 from agents import Farmer
-from objects import Farmland, Crop
+from objects import Farmland, Crop, JGL
 from data import ModelParameters, calculate_gini, calculate_number_of_crops, get_farm_size, get_crop_dict, predict_crop_prices
 
 
@@ -29,6 +29,7 @@ class FarmingModel(Model):
         self.crops_per_farmer_coefficient = 3  # Does not actually represent the average, since many farmers have not enough parcels of land to plant 3 crops.
         self.rainfall_range = (500, 1500)
         self.districts = ModelParameters.districts
+        self.jgls = []  # Changed to a list
 
         initial_money_range = (100000, 200000)  # in Rs
         cost_of_living_range = (25000, 100000)  # in Rs per year
@@ -70,6 +71,8 @@ class FarmingModel(Model):
             viable_positions = [pos for pos in empty if min_row <= pos[1] <= max_row]
             pos = self.random.choice(viable_positions)
             self.grid.place_agent(farmer, pos)
+
+            self.assign_to_jgl(farmer)
 
         total_neighbours = 0
         for farmer in self.schedule.agents:
@@ -119,6 +122,19 @@ class FarmingModel(Model):
         # Calculate fraction of farmers who have one or more open loans.
         self.fraction_borrowers = len([farmer for farmer in self.schedule.agents if len(farmer.loans) > 0]) / self.num_farmers
 
+    def assign_to_jgl(self, farmer):
+        if self.random.random() < ModelParameters.jgl_membership[farmer.type]:
+            # Filter JGLs by district and type
+            district_type_jgls = [jgl for jgl in self.jgls if jgl.district == farmer.district and jgl.type == farmer.type]
+            if not district_type_jgls or len(district_type_jgls[-1].members) >= district_type_jgls[-1].max_size:
+                # Create new JGL if none exist or the last one is full
+                jgl = JGL(max_size=self.random.randint(10, 15), type=farmer.type, district=farmer.district)
+                self.jgls.append(jgl)
+            else:
+                # Add to the last JGL
+                jgl = district_type_jgls[-1]
+            jgl.members.append(farmer)
+            farmer.jgl = jgl
 
 
 # Usage
