@@ -76,8 +76,8 @@ class Loan:
             self.current_interest_rate = self.interest_rate_after_duration
         self.amount *= 1 + self.current_interest_rate
 
-    def pay_back(self, amount):
-        self.amount -= amount
+    def pay_back(self, pay_amount):
+        self.amount -= pay_amount
         if self.amount <= 0:
             if self.lender is not None:
                 self.lender.money += self.amount
