@@ -25,7 +25,7 @@ class FarmingModel(Model):
         self.rainfall = None
         self.predicted_crop_prices = {}
         self.minimum_cropable_area = 0.4    # in ha (this is 1 Acre)
-        self.lend_probability = 0.3
+        self.lend_probability = 0.3  # TODO: Base this on P (p = 0.3b/(1-b) )
         self.crops_per_farmer_coefficient = 3  # Does not actually represent the average, since many farmers have not enough parcels of land to plant 3 crops.
         self.rainfall_range = (500, 1500)
         self.land_value = 20000000  # in Rs per ha
@@ -124,12 +124,13 @@ class FarmingModel(Model):
         self.fraction_borrowers = len([farmer for farmer in self.schedule.agents if len(farmer.loans) > 0]) / self.num_farmers
 
     def assign_to_jgl(self, farmer):
+        # TODO: Improve selection of joining JGL
         if self.random.random() < ModelParameters.jgl_membership[farmer.type]:
             # Filter JGLs by district and type
             district_type_jgls = [jgl for jgl in self.jgls if jgl.district == farmer.district and jgl.type == farmer.type]
             if not district_type_jgls or len(district_type_jgls[-1].members) >= district_type_jgls[-1].max_size:
                 # Create new JGL if none exist or the last one is full
-                jgl = JGL(max_size=self.random.randint(10, 15), type=farmer.type, district=farmer.district)
+                jgl = JGL(max_size=self.random.randint(4, 10), type=farmer.type, district=farmer.district)
                 self.jgls.append(jgl)
             else:
                 # Add to the last JGL

@@ -54,6 +54,7 @@ class Farmer(Agent):
         print(f"Farmer {self.unique_id} earned {income:.0f}, now has {self.money:.0f}")
 
     def plant_crops(self):
+        # TODO: Improve crop selection
         crop = get_weighted_crop_choice()
         self.farmland.plant(crop)
 
@@ -64,8 +65,10 @@ class Farmer(Agent):
         duration = 1
         # Create list of neighbours sorted by money (ask richest first)
         for neighbour in self.neighbours:
-            if neighbour.money > 0 and neighbour.will_lend:
-                amount_to_borrow_now = min(amount_to_borrow, neighbour.money)
+            if neighbour.will_lend and neighbour.money > 0:
+                # TODO: Incorporate trust or reputation of neighbour
+                max_willing_to_borrow = max(0, (neighbour.money - neighbour.cost_of_living * 1.5))
+                amount_to_borrow_now = min(amount_to_borrow, max_willing_to_borrow)
 
                 loan = Loan(amount_to_borrow_now, interest_rate, duration, self, neighbour)
                 neighbour.money -= amount_to_borrow_now
@@ -78,7 +81,8 @@ class Farmer(Agent):
 
         # Second, check Nationalized banks. Lowest rate of interest (10-14%), show collatoral (60%) or income.
         # Calculate max loan amount from income
-        income_financing = self.income * 0.3
+        # TODO: First take land as collatoral, then income (for slightly lower interest rate)
+        income_financing = (self.income - self.cost_of_living)  # TODO: Take average income over 3 years
 
         max_collateral = self.farmland.size * self.model.land_value * 0.6
         collateral_in_loans = sum([loan.collateral_used for loan in self.loans])
@@ -89,7 +93,7 @@ class Farmer(Agent):
 
         interest_rate = random.uniform(0.10, 0.14)
         interest_rate_after_duration = interest_rate * 1.5
-        duration = random.randint(2, 4)
+        duration = random.randint(1, 3)
 
         loan = Loan(amount_to_borrow_now, interest_rate, duration, self, interest_rate_after_duration=interest_rate_after_duration, collateral_used=collateral_used)
         self.money += amount_to_borrow_now
@@ -101,6 +105,8 @@ class Farmer(Agent):
             return
 
         # Third, check microfinance institution. TODO
+        # Payed of loans by another member of the JLG, are converted to neighbour loans
+        # Who pays back first?
 
         print(f"Farmer {self.unique_id} hasn't borrowed enough money, still needs {amount_to_borrow - borrowed:.0f}")
 
@@ -115,7 +121,6 @@ class Farmer(Agent):
             self.money -= amount_to_pay_back
             lender_name = f"farmer {loan.lender.unique_id}" if loan.lender is not None else "bank"
             print(f"Farmer {self.unique_id} paid back {amount_to_pay_back:.0f} to {lender_name}, {self.money:.0f} left, {len(self.loans)} loans left (total {sum([loan.amount for loan in self.loans]):.0f})")
-            i = 0
 
 # Loading agents:
 # - Nationalized banks. Lowest rate of interest (10-14%), show collatoral or income.
