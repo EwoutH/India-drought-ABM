@@ -26,6 +26,8 @@ class Farmer(Agent):
         value_last_year = self.value
         self.will_lend = self.random.random() < self.model.lend_probability
         self.money -= self.cost_of_living
+        for loan in self.loans:
+            loan.update()
 
         self.harvest_crops()
         # Select one random crop to plant. TODO: Make this neighbour dependent.
