@@ -19,6 +19,7 @@ class Farmland:
         self.crop_counter = Counter()
 
     def plant(self, new_crop, n_parcels=1, replace_pref=[]):
+        # TODO: Simply by only updating one parcel, and one replace_pref value
         replace_pref = [crop_type for crop_type in replace_pref if crop_type in self.parcels]
         replace_pref_index = 0
         while n_parcels > 0:
@@ -77,6 +78,7 @@ class Loan:
         self.amount *= 1 + self.current_interest_rate
 
     def pay_back(self, pay_amount):
+        # TODO: Check how collateral should be reduced
         self.amount -= pay_amount
         if self.amount <= 0:
             if self.lender is not None:

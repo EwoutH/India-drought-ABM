@@ -1,6 +1,8 @@
 import random
 
 from mesa import Agent
+from collections import Counter
+import pandas as pd
 from objects import Crop, Farmland, Loan
 from data import ModelParameters, get_weighted_crop_choice
 
@@ -30,8 +32,6 @@ class Farmer(Agent):
             loan.update()
 
         self.harvest_crops()
-        # Select one random crop to plant. TODO: Make this neighbour dependent.
-        crop = get_weighted_crop_choice()
         self.plant_crops()
 
         if self.money < 0:
@@ -53,12 +53,42 @@ class Farmer(Agent):
         income = self.farmland.harvest(year=self.model.year)
         self.income = income
         self.money += income
-        print(f"Farmer {self.unique_id} earned {income:.0f}, now has {self.money:.0f}")
+        # print(f"Farmer {self.unique_id} earned {income:.0f}, now has {self.money:.0f}")
 
     def plant_crops(self):
-        # TODO: Improve crop selection
-        crop = get_weighted_crop_choice()
-        self.farmland.plant(crop)
+        current_crops = list(Counter([parcel.crop for parcel in self.farmland.parcels]).keys())
+
+        # Calculate the count of each crop among all neighbours
+        crop_counts = {crop: 0 for crop in ModelParameters.crop_list}
+        for neighbour in self.neighbours:
+            for parcel in neighbour.farmland.parcels:
+                crop_counts[parcel.crop] += 1
+        crop_counts = {crop: count for crop, count in crop_counts.items() if count > 0}
+
+        print(crop_counts)
+
+        # Get crops that at least 1/3rd of the neighbours have planted
+        potential_crops = [crop for crop, count in crop_counts.items() if count > len(self.neighbours) / 3]
+        print(f"Farmer {self.unique_id} has {len(potential_crops)} potential crops to choose from: {potential_crops}")
+
+        # Select the crop with the highest price per hectare
+        c_p = pd.Series(self.model.predicted_crop_prices[self.district])
+        c_y = pd.Series(ModelParameters.crop_df["Yield (tons/ha)"])
+
+        # TODO: Calculate globally to increase performance
+        # Calculate price per hectare
+        price_density = c_p * c_y
+
+        if len(potential_crops) > 0:
+            price_density_pot = price_density[price_density.index.isin(potential_crops)]
+            best_crop = price_density_pot.idxmax()
+        else:
+            best_crop = random.choice(current_crops)
+
+        worst_crop = price_density[price_density.index.isin(current_crops)].idxmin()
+
+        self.farmland.plant(best_crop, replace_pref=[worst_crop])
+        print(f"Farmer {self.unique_id} planted {best_crop} (replacing {worst_crop})")
 
     def borrow_money(self, amount_to_borrow, max_interest_rate=2.0):
         borrowed = 0
@@ -108,7 +138,9 @@ class Farmer(Agent):
 
         # Third, check microfinance institution. TODO
         # Payed of loans by another member of the JLG, are converted to neighbour loans
-        # Who pays back first?
+        # Who pays back first? = spread equally among all members
+        # TODO: Join JLG when collateral is maxed out
+        # Tag as "bankrupt"
 
         print(f"Farmer {self.unique_id} hasn't borrowed enough money, still needs {amount_to_borrow - borrowed:.0f}")
 
