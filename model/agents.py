@@ -157,6 +157,7 @@ class Farmer(Agent):
         # Payed of loans by another member of the JLG, are converted to neighbour loans
         # Who pays back first? = spread equally among all members
         # TODO: Join JLG when collateral is maxed out
+        # TODO: How much can be borrowed by a JLG?
         # Tag as "bankrupt"
 
         # print(f"Farmer {self.unique_id} hasn't borrowed enough money, still needs {amount_to_borrow - borrowed:.0f}")

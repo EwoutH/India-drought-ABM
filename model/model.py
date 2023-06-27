@@ -27,13 +27,13 @@ class FarmingModel(Model):
         self.minimum_cropable_area = 0.4    # in ha (this is 1 Acre)
         self.lend_probability = 0.3
         self.crops_per_farmer_coefficient = 3  # Does not actually represent the average, since many farmers have not enough parcels of land to plant 3 crops.
-        self.rainfall_range = (500, 1500)
-        self.land_value = 20000000  # in Rs per ha
+        self.rainfall_range = (500, 1500)  # TODO: Base on data
+        self.land_value = 20000000  # in Rs per ha (TODO)
         self.districts = ModelParameters.districts
         self.jgls = []  # Changed to a list
 
-        initial_money_range = (100000, 200000)  # in Rs
-        cost_of_living_range = (25000, 100000)  # in Rs per year
+        initial_money_range = (100000, 200000)  # in Rs             TODO: Base on data
+        cost_of_living_range = (25000, 100000)  # in Rs per year    TODO: Let depend on income
 
         # Calculate total grid size
         grid_size = self.num_farmers * 8 // self.avg_neighbours
@@ -126,7 +126,7 @@ class FarmingModel(Model):
         self.fraction_borrowers = len([farmer for farmer in self.schedule.agents if len(farmer.loans) > 0]) / self.num_farmers
 
     def assign_to_jgl(self, farmer):
-        # TODO: Improve selection of joining JGL
+        # TODO: Improve selection of joining JGL. Base one if collateral is maxed out
         if self.random.random() < ModelParameters.jgl_membership[farmer.type]:
             # Filter JGLs by district and type
             district_type_jgls = [jgl for jgl in self.jgls if jgl.district == farmer.district and jgl.type == farmer.type]
