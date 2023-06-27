@@ -111,30 +111,47 @@ class Farmer(Agent):
                 if borrowed >= amount_to_borrow:
                     return
 
-        # Second, check Nationalized banks. Lowest rate of interest (10-14%), show collatoral (60%) or income.
+        # Second, check Nationalized banks. Lowest rate of interest (10-14%), show collatoral (60%).
         # Calculate max loan amount from income
-        # TODO: First take land as collatoral, then income (for slightly lower interest rate)
-        income_financing = (self.income - self.cost_of_living)  # TODO: Take average income over 3 years
 
         max_collateral = self.farmland.size * self.model.land_value * 0.6
         collateral_in_loans = sum([loan.collateral_used for loan in self.loans])
-        available_collateral = max(0, (max_collateral - collateral_in_loans))
+        available_collateral = max_collateral - collateral_in_loans
 
-        amount_to_borrow_now = min(amount_to_borrow, (income_financing + available_collateral))
-        collateral_used = max(0, (amount_to_borrow_now - income_financing))
+        if available_collateral > 0:
+            amount_to_borrow_now = min(amount_to_borrow, available_collateral)
 
-        interest_rate = random.uniform(0.10, 0.14)
-        interest_rate_after_duration = interest_rate * 1.5
-        duration = random.randint(1, 3)
+            interest_rate = random.uniform(0.10, 0.14)
+            interest_rate_after_duration = interest_rate * 1.5
+            duration = random.randint(1, 3)
 
-        loan = Loan(amount_to_borrow_now, interest_rate, duration, self, interest_rate_after_duration=interest_rate_after_duration, collateral_used=collateral_used)
-        self.money += amount_to_borrow_now
-        self.loans.append(loan)
-        borrowed += amount_to_borrow_now
-        # print(f"Farmer {self.unique_id} borrowed {amount_to_borrow_now:.0f} for {duration} years at {interest_rate:.2%} from bank based on proven income and {collateral_used:.0f} collateral")
+            loan = Loan(amount_to_borrow_now, interest_rate, duration, self, interest_rate_after_duration=interest_rate_after_duration, collateral_used=amount_to_borrow_now)
+            self.money += amount_to_borrow_now
+            self.loans.append(loan)
+            borrowed += amount_to_borrow_now
+            # print(f"Farmer {self.unique_id} borrowed {amount_to_borrow_now:.0f} for {duration} years at {interest_rate:.2%} from bank based on collateral")
+            if borrowed >= amount_to_borrow:
+                return
 
-        if borrowed >= amount_to_borrow:
-            return
+        # Third, check Nationalized banks. Rate of interest (16-18%), show income.
+        income_financing = (self.income - self.cost_of_living) * 0.6
+        if income_financing > 0:
+            amount_to_borrow_now = min(amount_to_borrow, income_financing)
+
+            interest_rate = random.uniform(0.16, 0.18)
+            interest_rate_after_duration = interest_rate * 1.5
+            duration = random.randint(1, 3)
+
+            loan = Loan(amount_to_borrow_now, interest_rate, duration, self, interest_rate_after_duration=interest_rate_after_duration)
+            self.money += amount_to_borrow_now
+            self.loans.append(loan)
+            borrowed += amount_to_borrow_now
+            print(f"Farmer {self.unique_id} borrowed {amount_to_borrow_now:.0f} for {duration} years at {interest_rate:.2%} from bank based on income")
+            if borrowed >= amount_to_borrow:
+                print(f"Farmer {self.unique_id} borrowed enough money: {borrowed:.0f}")
+                return
+
+        print(f"Farmer {self.unique_id} borrowed {borrowed:.0f} from neighbours and banks, still needs {amount_to_borrow - borrowed:.0f}")
 
         # Third, check microfinance institution. TODO
         # Payed of loans by another member of the JLG, are converted to neighbour loans
