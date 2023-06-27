@@ -65,11 +65,11 @@ class Farmer(Agent):
                 crop_counts[parcel.crop] += 1
         crop_counts = {crop: count for crop, count in crop_counts.items() if count > 0}
 
-        print(crop_counts)
+        # print(crop_counts)
 
         # Get crops that at least 1/3rd of the neighbours have planted
         potential_crops = [crop for crop, count in crop_counts.items() if count > len(self.neighbours) / 3]
-        print(f"Farmer {self.unique_id} has {len(potential_crops)} potential crops to choose from: {potential_crops}")
+        # print(f"Farmer {self.unique_id} has {len(potential_crops)} potential crops to choose from: {potential_crops}")
 
         # Select the crop with the highest price per hectare
         c_p = pd.Series(self.model.predicted_crop_prices[self.district])
@@ -88,7 +88,7 @@ class Farmer(Agent):
         worst_crop = price_density[price_density.index.isin(current_crops)].idxmin()
 
         self.farmland.plant(best_crop, replace_pref=[worst_crop])
-        print(f"Farmer {self.unique_id} planted {best_crop} (replacing {worst_crop})")
+        # print(f"Farmer {self.unique_id} planted {best_crop} (replacing {worst_crop})")
 
     def borrow_money(self, amount_to_borrow, max_interest_rate=2.0):
         borrowed = 0
@@ -107,7 +107,7 @@ class Farmer(Agent):
                 self.money += amount_to_borrow_now
                 self.loans.append(loan)
                 borrowed += amount_to_borrow_now
-                print(f"Farmer {self.unique_id} borrowed {amount_to_borrow_now:.0f} from farmer {neighbour.unique_id}")
+                # print(f"Farmer {self.unique_id} borrowed {amount_to_borrow_now:.0f} from farmer {neighbour.unique_id}")
                 if borrowed >= amount_to_borrow:
                     return
 
@@ -131,7 +131,7 @@ class Farmer(Agent):
         self.money += amount_to_borrow_now
         self.loans.append(loan)
         borrowed += amount_to_borrow_now
-        print(f"Farmer {self.unique_id} borrowed {amount_to_borrow_now:.0f} for {duration} years at {interest_rate:.2%} from bank based on proven income and {collateral_used:.0f} collateral")
+        # print(f"Farmer {self.unique_id} borrowed {amount_to_borrow_now:.0f} for {duration} years at {interest_rate:.2%} from bank based on proven income and {collateral_used:.0f} collateral")
 
         if borrowed >= amount_to_borrow:
             return
@@ -142,7 +142,7 @@ class Farmer(Agent):
         # TODO: Join JLG when collateral is maxed out
         # Tag as "bankrupt"
 
-        print(f"Farmer {self.unique_id} hasn't borrowed enough money, still needs {amount_to_borrow - borrowed:.0f}")
+        # print(f"Farmer {self.unique_id} hasn't borrowed enough money, still needs {amount_to_borrow - borrowed:.0f}")
 
     # Pay back as much open loans, until either all loans are paid back, all money is used or the interest rate to lend
     def pay_back_loans(self):
@@ -154,7 +154,7 @@ class Farmer(Agent):
             loan.pay_back(amount_to_pay_back)
             self.money -= amount_to_pay_back
             lender_name = f"farmer {loan.lender.unique_id}" if loan.lender is not None else "bank"
-            print(f"Farmer {self.unique_id} paid back {amount_to_pay_back:.0f} to {lender_name}, {self.money:.0f} left, {len(self.loans)} loans left (total {sum([loan.amount for loan in self.loans]):.0f})")
+            # print(f"Farmer {self.unique_id} paid back {amount_to_pay_back:.0f} to {lender_name}, {self.money:.0f} left, {len(self.loans)} loans left (total {sum([loan.amount for loan in self.loans]):.0f})")
 
 # Loading agents:
 # - Nationalized banks. Lowest rate of interest (10-14%), show collatoral or income.

@@ -25,7 +25,7 @@ class FarmingModel(Model):
         self.rainfall = None
         self.predicted_crop_prices = {}
         self.minimum_cropable_area = 0.4    # in ha (this is 1 Acre)
-        self.lend_probability = 0.3  # TODO: Base this on P (p = 0.3b/(1-b) )
+        self.lend_probability = 0.3
         self.crops_per_farmer_coefficient = 3  # Does not actually represent the average, since many farmers have not enough parcels of land to plant 3 crops.
         self.rainfall_range = (500, 1500)
         self.land_value = 20000000  # in Rs per ha
@@ -105,6 +105,8 @@ class FarmingModel(Model):
     def step(self):
         self.random.randrange(*self.rainfall_range)
         self.calculate_fraction_borrowers()
+        self.lend_probability = 0.3 * self.fraction_borrowers / (1 - self.fraction_borrowers)
+        print(f"Fraction of borrowers: {self.fraction_borrowers:.3f}, lending probability: {self.lend_probability:.3f}")
         predict_crop_prices(self)
 
         self.datacollector.collect(self)
