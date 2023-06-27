@@ -102,8 +102,8 @@ def predict_crop_prices(model):
 
 
 def calculate_gini(model):
-    agent_value = [agent.value for agent in model.schedule.agents]
-    x = sorted(agent_value)
+    agent_incomes = [agent.income for agent in model.schedule.agents]
+    x = sorted(agent_incomes)
     N = model.num_farmers
     B = sum(xi * (N - i) for i, xi in enumerate(x)) / (N * sum(x))
     return 1 + (1 / N) - 2 * B

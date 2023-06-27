@@ -109,9 +109,9 @@ class FarmingModel(Model):
         print(f"Fraction of borrowers: {self.fraction_borrowers:.3f}, lending probability: {self.lend_probability:.3f}")
         predict_crop_prices(self)
 
-        self.datacollector.collect(self)
         self.schedule.step()
         self.year += 1
+        self.datacollector.collect(self)
 
     def rabi(self):
         # Grows with irrigation
