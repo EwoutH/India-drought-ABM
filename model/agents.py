@@ -23,6 +23,7 @@ class Farmer(Agent):
         self.years_in_debt = 0
         self.years_in_increasing_debt = 0
         self.jgl = None  # JGL reference
+        self.working_age_members = random.randint(1, 3)  # TODO Draw from data
 
     def step(self):
         value_last_year = self.value
@@ -34,12 +35,17 @@ class Farmer(Agent):
         self.harvest_crops()
         self.plant_crops()
 
+        # TODO: Invest in irrigation
+
+        if self.money < 0 or len(self.loans) > 0 or (self.income - self.cost_of_living) < 0:
+            self.work()
+
         if self.money < 0:
             self.borrow_money(amount_to_borrow=-self.money)
         self.pay_back_loans()
 
         # Update value by subtracting loans from money, and debt status
-        self.value = self.money - sum([loan.amount for loan in self.loans])
+        self.value = self.money + self.land_value - sum([loan.amount for loan in self.loans])
         if self.value < 0:
             self.years_in_debt += 1
             if self.value < value_last_year:
@@ -48,6 +54,8 @@ class Farmer(Agent):
                 self.years_in_increasing_debt = 0
         else:
             self.years_in_debt = 0
+
+        # TODO check bankrupt.
 
     def harvest_crops(self):
         income = self.farmland.harvest(year=self.model.year)
@@ -89,6 +97,10 @@ class Farmer(Agent):
 
         self.farmland.plant(best_crop, replace_pref=[worst_crop])
         # print(f"Farmer {self.unique_id} planted {best_crop} (replacing {worst_crop})")
+
+    def work(self):
+        # Let days of work depend on income-expenditure, loans and current money
+        pass
 
     def borrow_money(self, amount_to_borrow, max_interest_rate=2.0):
         borrowed = 0
@@ -157,7 +169,7 @@ class Farmer(Agent):
         # Payed of loans by another member of the JLG, are converted to neighbour loans
         # Who pays back first? = spread equally among all members
         # TODO: Join JLG when collateral is maxed out
-        # TODO: How much can be borrowed by a JLG?
+        # TODO: How much can be borrowed by a JLG? --> 100000 Rs per farmer
         # Tag as "bankrupt"
 
         # print(f"Farmer {self.unique_id} hasn't borrowed enough money, still needs {amount_to_borrow - borrowed:.0f}")

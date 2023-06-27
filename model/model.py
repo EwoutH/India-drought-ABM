@@ -31,6 +31,8 @@ class FarmingModel(Model):
         self.land_value = 20000000  # in Rs per ha (TODO)
         self.districts = ModelParameters.districts
         self.jgls = []  # Changed to a list
+        self.max_additional_income = 80 * 450   # 80 days of work, 450 Rs per day
+        # TODO: Add policy option of 24000 Rs per year per farmer, as UBI
 
         initial_money_range = (100000, 200000)  # in Rs             TODO: Base on data
         cost_of_living_range = (25000, 100000)  # in Rs per year    TODO: Let depend on income
@@ -111,7 +113,7 @@ class FarmingModel(Model):
 
         self.schedule.step()
         self.year += 1
-        self.datacollector.collect(self)
+        self.datacollector.collect(self)  # TODO: Only collect data after certain year (warmup)
 
     def rabi(self):
         # Grows with irrigation

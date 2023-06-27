@@ -47,6 +47,7 @@ class Farmland:
             if parcel.crop is not None:
                 # Lookup the crop price from the crop_df
                 crop_price = district_df[parcel.crop][year]
+                # TODO: Calculate crop yield for each parcel based on rain-yield regression
                 crop_yield = ModelParameters.crop_df.loc[parcel.crop]["Yield (tons/ha)"]
                 income += crop_price * 10 * crop_yield * parcel.size
         return income
