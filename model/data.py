@@ -51,6 +51,12 @@ class ModelParameters:
         # Save the crop prices dictionary.
         crop_prices_dict[district] = crop_prices
 
+    # TODO: Calculate rain for simulation lenght.
+
+
+    # TODO: Calculate yield values based on rainfall.
+
+
 # Set all crop probabilities to 0, if the crop is not grown at all
 
 
@@ -92,11 +98,11 @@ def classify_size(size):
     return ModelParameters.size_classes[bin_index]
 
 
-def predict_crop_prices(model):
+def predict_crop_prices(model, years_to_consider=5):
     # For each district, predict next years crop prices for farmers using the mean of the previous 5 years.
     for district in ModelParameters.districts:
         # Get the last 5 years of crop prices. The current year is model.year.
-        crop_prices = ModelParameters.crop_prices_dict[district].loc[model.year - 5:model.year - 1]
+        crop_prices = ModelParameters.crop_prices_dict[district].loc[model.year - years_to_consider:model.year - 1]
         # Calculate the mean of the last 5 years, and save it as a dictionary.
         model.predicted_crop_prices[district] = crop_prices.mean().to_dict()
 

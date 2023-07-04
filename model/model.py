@@ -105,6 +105,7 @@ class FarmingModel(Model):
         )
 
     def step(self):
+        # Update yearly parameters
         self.random.randrange(*self.rainfall_range)
         self.calculate_fraction_borrowers()
         self.lend_probability = 0.3 * self.fraction_borrowers / (1 - self.fraction_borrowers)

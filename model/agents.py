@@ -26,19 +26,21 @@ class Farmer(Agent):
         self.working_age_members = random.randint(1, 3)  # TODO Draw from data
 
     def step(self):
+        # Update economic parameters
         value_last_year = self.value
         self.will_lend = self.random.random() < self.model.lend_probability
         self.money -= self.cost_of_living
         for loan in self.loans:
             loan.update()
 
+        # Harvest and plant crops
         self.harvest_crops()
         self.plant_crops()
 
         # TODO: Invest in irrigation
 
         if self.money < 0 or len(self.loans) > 0 or (self.income - self.cost_of_living) < 0:
-            self.work()
+            self.work()  # TODO write function
 
         if self.money < 0:
             self.borrow_money(amount_to_borrow=-self.money)
@@ -69,18 +71,23 @@ class Farmer(Agent):
         # Calculate the count of each crop among all neighbours
         crop_counts = {crop: 0 for crop in ModelParameters.crop_list}
         for neighbour in self.neighbours:
+            neighbour_crops = []
             for parcel in neighbour.farmland.parcels:
-                crop_counts[parcel.crop] += 1
+                if parcel.crop not in neighbour_crops:
+                    neighbour_crops.append(parcel.crop)
+            for crop in neighbour_crops:
+                crop_counts[crop] += 1
         crop_counts = {crop: count for crop, count in crop_counts.items() if count > 0}
 
         # print(crop_counts)
 
         # Get crops that at least 1/3rd of the neighbours have planted
-        potential_crops = [crop for crop, count in crop_counts.items() if count > len(self.neighbours) / 3]
+        potential_crops = [crop for crop, count in crop_counts.items() if count >= len(self.neighbours) / 3]
         # print(f"Farmer {self.unique_id} has {len(potential_crops)} potential crops to choose from: {potential_crops}")
 
         # Select the crop with the highest price per hectare
         c_p = pd.Series(self.model.predicted_crop_prices[self.district])
+        # TODO: Replace expected yield from previous years based on rainfall-regression
         c_y = pd.Series(ModelParameters.crop_df["Yield (tons/ha)"])
 
         # TODO: Calculate globally to increase performance
@@ -95,7 +102,7 @@ class Farmer(Agent):
 
         worst_crop = price_density[price_density.index.isin(current_crops)].idxmin()
 
-        self.farmland.plant(best_crop, replace_pref=[worst_crop])
+        self.farmland.plant(best_crop, n_parcels=1, replace_pref=[worst_crop])
         # print(f"Farmer {self.unique_id} planted {best_crop} (replacing {worst_crop})")
 
     def work(self):
