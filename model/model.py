@@ -11,7 +11,7 @@ from mesa.space import SingleGrid
 
 from agents import Farmer
 from objects import Farmland, Crop, JGL
-from data import ModelParameters, calculate_gini, calculate_number_of_crops, get_farm_size, get_crop_dict, predict_crop_prices
+from data import ModelParameters, calculate_gini, calculate_number_of_crops, get_farm_size, get_crop_dict, predict_crop_prices, predicted_yield
 
 
 class FarmingModel(Model):

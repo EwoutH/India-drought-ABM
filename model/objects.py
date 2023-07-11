@@ -1,6 +1,11 @@
-from data import ModelParameters
+from data import ModelParameters, predicted_yield
 from collections import Counter
 import random
+from data import residuals as residuals_dict
+
+
+
+
 
 
 class Crop:
@@ -47,9 +52,17 @@ class Farmland:
             if parcel.crop is not None:
                 # Lookup the crop price from the crop_df
                 crop_price = district_df[parcel.crop][year]
-                # TODO: Calculate crop yield for each parcel based on rain-yield regression (including rain lookup, and irrigation)
-                crop_yield = ModelParameters.crop_df.loc[parcel.crop]["Yield (tons/ha)"]
-                income += crop_price * 10 * crop_yield * parcel.size  # TODO: Here's some unit conversion, make it excplicit
+                # TODO: Replace random rainfall with forecasted rainfall
+
+                # Calculate rainfall as a random value between 300 and 750
+                rainfall = random.randint(0, 800)
+
+                # Calculate crop yield for each parcel based on rain-yield regression
+                crop_yield = predicted_yield(parcel.crop, rainfall, residuals_dict)
+                #crop_yield = ModelParameters.crop_df.loc[parcel.crop]["Yield (tons/ha)"]
+
+                # Yield in kg/ha, crop prices in Rs/quintal (100 kg)
+                income += (crop_price / 100) * crop_yield * parcel.size
         return income
 
 class Parcel:

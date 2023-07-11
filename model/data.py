@@ -4,10 +4,15 @@ import numpy as np
 from random import gauss
 from scipy.stats import lognorm
 from collections import Counter
+import random
 
 crop_df_local = pd.read_csv('../analysis/crops/agg_data.csv', index_col=0)
 farm_df_local = pd.read_csv('../Data/Farmland/farmland_clean.csv', index_col=0)
 land_value_df_local = pd.read_csv('../Data/csv_data/land_value.csv', index_col=0)
+lookup_table_yield = pd.read_pickle('../Data/csv_data/lookup_table_yield.pkl')
+residuals = pd.read_pickle('../Data/csv_data/yield_residuals_dict.pkl')
+
+
 
 p = crop_df_local["Area (1000 ha)"]
 p = p.fillna(0)
@@ -16,7 +21,7 @@ crop_probabilities = p / p.sum()
 
 @dataclass
 class ModelParameters:
-    num_farmers: int = 1000
+    num_farmers: int = 5000
     initial_year: int = 2017
     run_length: int = 30
     crop_list = p.index.tolist()
@@ -118,3 +123,27 @@ def calculate_number_of_crops(model):
     # Create a Counter with the number of farmers that have a certain number of crops.
     number_of_crops = [len(farmer.farmland.crop_counter) for farmer in model.schedule.agents]
     return Counter(number_of_crops)
+
+def predicted_yield(current_crop, rainfall, residuals):
+    # Convert the current_crop to uppercase
+    current_crop = current_crop.upper()
+
+    # Extract the regression parameters for the current crop from the lookup table
+    if current_crop in lookup_table_yield['Crop'].values:
+        intercept = lookup_table_yield.loc[lookup_table_yield['Crop'] == current_crop, 'Intercept'].values[0]
+        slope = lookup_table_yield.loc[lookup_table_yield['Crop'] == current_crop, 'Slope'].values[0]
+
+        # Predict the yield
+        yield_prediction = intercept + slope * rainfall
+
+        # If the crop has residuals stored, add a random residual to the prediction
+        if current_crop in residuals:
+            yield_prediction += np.random.choice(residuals[current_crop])
+    else:
+        # Handle the case when current_crop is not found in the DataFrame
+        print(f"Warning: {current_crop} not found in lookup_table_yield. Using a default yield.")
+        yield_prediction = 1  # replace 1 with any default yield value suitable for your case
+
+    return yield_prediction
+
+
