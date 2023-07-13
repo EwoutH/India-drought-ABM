@@ -71,7 +71,7 @@ class Parcel:
         self.crop = None
 
 class Loan:
-    def __init__(self, amount, interest_rate, duration, borrower, lender=None, interest_rate_after_duration=None, collateral_used=0):
+    def __init__(self, amount, interest_rate, duration, borrower, lender=None, interest_rate_after_duration=None, collateral_used=0, jlg=False):
         self.amount = amount
         self.interest_rate = interest_rate
         self.duration = duration
@@ -83,6 +83,7 @@ class Loan:
         )
         self.current_interest_rate = interest_rate
         self.collateral_used = collateral_used
+        self.jlg = jlg
 
     def update(self):
         # TODO: Validate order of steps here, also considering year = 0

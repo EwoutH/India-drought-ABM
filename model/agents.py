@@ -7,7 +7,7 @@ from objects import Crop, Farmland, Loan
 from data import ModelParameters, get_weighted_crop_choice
 
 class Farmer(Agent):
-    def __init__(self, unique_id, model, type, district, farmland, initial_money, cost_of_living):
+    def __init__(self, unique_id, model, type, district, farmland, initial_money, cost_of_living, jlg=False):
         super().__init__(unique_id, model)
         self.type = type
         self.district = district
@@ -24,6 +24,9 @@ class Farmer(Agent):
         self.years_in_increasing_debt = 0
         self.jgl = None  # JGL reference
         self.working_age_members = random.randint(1, 3)  # TODO Draw from data
+        self.in_JLG = False
+        self.jlg = jlg
+
 
     def step(self):
         # Update economic parameters
@@ -170,7 +173,36 @@ class Farmer(Agent):
                 print(f"Farmer {self.unique_id} borrowed enough money: {borrowed:.0f}")
                 return
 
-        print(f"Farmer {self.unique_id} borrowed {borrowed:.0f} from neighbours and banks, still needs {amount_to_borrow - borrowed:.0f}")
+        # Fourth, check Joint Liability Groups (JLGs). A group of farmers can borrow together with a high interest rate (24%).
+        # Each farmer can only be part of one JLG.
+        if not self.in_JLG:
+            # Check if there are enough farmers to form a JLG
+            non_JLG_farmers = [farmer for farmer in self.model.schedule.agents if not farmer.in_JLG]
+            if len(non_JLG_farmers) >= 9:  # Plus this farmer makes 10
+                # Form a JLG
+                for farmer in non_JLG_farmers[:9]:  # Only take 9 farmers to form a JLG
+                    farmer.in_JLG = True
+                self.in_JLG = True
+                # Set the amount to borrow now, not exceeding the maximum limit of 1 lakh
+                amount_to_borrow_now = min(amount_to_borrow, 100000)  # 1 lakh is the maximum limit
+
+                interest_rate = 0.24
+                duration = random.randint(1, 3)  # Assume some random duration for the JLG loan
+
+                loan = Loan(amount_to_borrow_now, interest_rate, duration, self, jlg=True)
+                self.money += amount_to_borrow_now
+                self.loans.append(loan)
+                borrowed += amount_to_borrow_now
+                print(
+                    f"Farmer {self.unique_id} borrowed {amount_to_borrow_now:.0f} for {duration} years at {interest_rate:.2%} from a JLG")
+                if borrowed >= amount_to_borrow:
+                    print(f"Farmer {self.unique_id} borrowed enough money: {borrowed:.0f}")
+                    return
+
+        if borrowed < amount_to_borrow:
+            print(
+                f"Farmer {self.unique_id} borrowed {borrowed:.0f} from neighbours, banks, and possibly a JLG, but still needs {amount_to_borrow - borrowed:.0f}")
+        #print(f"Farmer {self.unique_id} borrowed {borrowed:.0f} from neighbours and banks, still needs {amount_to_borrow - borrowed:.0f}")
 
         # Third, check microfinance institution. TODO
         # Payed of loans by another member of the JLG, are converted to neighbour loans
@@ -180,6 +212,9 @@ class Farmer(Agent):
         # Tag as "bankrupt"
 
         # print(f"Farmer {self.unique_id} hasn't borrowed enough money, still needs {amount_to_borrow - borrowed:.0f}")
+
+
+
 
     # Pay back as much open loans, until either all loans are paid back, all money is used or the interest rate to lend
     def pay_back_loans(self):

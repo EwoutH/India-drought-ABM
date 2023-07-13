@@ -21,7 +21,7 @@ crop_probabilities = p / p.sum()
 
 @dataclass
 class ModelParameters:
-    num_farmers: int = 5000
+    num_farmers: int = 1000
     initial_year: int = 2017
     run_length: int = 30
     crop_list = p.index.tolist()
