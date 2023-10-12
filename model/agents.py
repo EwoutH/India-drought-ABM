@@ -24,11 +24,13 @@ class Farmer(Agent):
         self.years_in_increasing_debt = 0
         self.jgl = None  # JGL reference
         self.working_age_members = random.randint(1, 3)  # TODO Draw from data
+        self.bankrupt = False
 
     def step(self):
-        # Update economic parameters
+        # Determine own value and if they will lend to neighbours
         value_last_year = self.value
         self.will_lend = self.random.random() < self.model.lend_probability
+        # Update own economic situation
         self.money -= self.cost_of_living
         for loan in self.loans:
             loan.update()
@@ -37,7 +39,7 @@ class Farmer(Agent):
         self.harvest_crops()
         self.plant_crops()
 
-        # TODO: Invest in irrigation
+        # Maybe important TODO: Invest in irrigation
 
         if self.money < 0 or len(self.loans) > 0 or (self.income - self.cost_of_living) < 0:
             self.work()  # TODO write function
@@ -57,7 +59,9 @@ class Farmer(Agent):
         else:
             self.years_in_debt = 0
 
-        # TODO check bankrupt.
+        # Mark bankrupt if in debt is increasing for 5 consecutive years
+        if self.years_in_increasing_debt >= 5:
+            self.bankrupt = True
 
     def harvest_crops(self):
         income = self.farmland.harvest(year=self.model.year)
@@ -106,7 +110,7 @@ class Farmer(Agent):
         # print(f"Farmer {self.unique_id} planted {best_crop} (replacing {worst_crop})")
 
     def work(self):
-        # Let days of work depend on income-expenditure, loans and current money
+        # Important TODO: Let days of work depend on income-expenditure, loans and current money
         pass
 
     def borrow_money(self, amount_to_borrow, max_interest_rate=2.0):
@@ -172,7 +176,7 @@ class Farmer(Agent):
 
         print(f"Farmer {self.unique_id} borrowed {borrowed:.0f} from neighbours and banks, still needs {amount_to_borrow - borrowed:.0f}")
 
-        # Third, check microfinance institution. TODO
+        # Third, check microfinance institution. Important TODO
         # Payed of loans by another member of the JLG, are converted to neighbour loans
         # Who pays back first? = spread equally among all members
         # TODO: Join JLG when collateral is maxed out

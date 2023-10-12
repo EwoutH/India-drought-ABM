@@ -96,6 +96,7 @@ class FarmingModel(Model):
                 parcel.crop = crop
 
         # Add data collector.
+        # IMPORTANT TODO: Add more model and agent reporters as KPIs
         self.datacollector = DataCollector(
             model_reporters={"Gini": calculate_gini,
                              "Number of crops": calculate_number_of_crops},
@@ -152,12 +153,22 @@ for i in range(ModelParameters.run_length):
 
 gini = model.datacollector.get_model_vars_dataframe()
 gini.plot()
+# Set plot titles and labels
+plt.title("Gini coefficient (inequality) over time")
+plt.xlabel("Year")
+plt.ylabel("Gini coefficient")
 plt.show()
 
 # Plot the wealth of all farmers
 agent_wealth = model.datacollector.get_agent_vars_dataframe()
 agent_wealth.reset_index().pivot(index='Step', columns='AgentID', values='Money').plot()
+plt.title("Wealth of different agents over time")
+plt.xlabel("Year")
+plt.ylabel("Wealth (Rs)")
 plt.show()
 
 agent_wealth.reset_index().pivot(index='Step', columns='AgentID', values='Years in increasing debt').plot()
+plt.title("Years in increasing debt of different agents over time")
+plt.xlabel("Year")
+plt.ylabel("Years in increasing debt")
 plt.show()
